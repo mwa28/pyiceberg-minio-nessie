@@ -1,2 +1,6 @@
-{"controller_id": 12351251, "timestamp": 2141532523523, "parameter": "temperature", "value": 32.5 }
-{"controller_id": 12351251, "timestamp": 2141532523523, "parameter": "pressure", "value": 32.5 }
+{"controller_id": 12351251, "timestamp": 1635577952, "parameter": "temperature", "value": 32.5, "unit": "celsius"}
+{"controller_id": 12351251, "timestamp": 1635577952, "parameter": "pressure", "value": 1.0, "unit": "bar" }
+{"controller_id": 12351251, "timestamp": 1635578072, "parameter": "temperature", "value": 33.0, "unit": "celsius" }
+{"controller_id": 12351251, "timestamp": 1635578072, "parameter": "pressure", "value": 1.05, "unit": "bar" }
+{"controller_id": 12351252, "timestamp": 1635578072, "parameter": "temperature", "value": 34.0, "unit": "celsius" }
+{"controller_id": 12351252, "timestamp": 1635578072, "parameter": "pressure", "value": 1.0, "unit": "bar" }

@@ -3,7 +3,7 @@
     {
       "s3": {
         "bucket": {"name": "iot-bucket"},
-        "object": {"key": "sensor-data.json"}
+        "object": {"key": "sensor-data.jsonl"}
       }
     }
   ]
