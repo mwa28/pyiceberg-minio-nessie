@@ -1,0 +1,3 @@
+pyiceberg==0.10.0
+awswrangler==3.13.0
+duckdb==1.4.1

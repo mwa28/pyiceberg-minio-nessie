@@ -1,0 +1,29 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: IoT File Processing with DuckDB and PyIceberg
+
+Resources:
+  IoTFileProcessor:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda_function/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Timeout: 30
+      Environment:
+        Variables:
+          MINIO_ENDPOINT: http://localhost:9000
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          NESSIE_ENDPOINT: http://localhost:19120/iceberg
+          ICEBERG_WAREHOUSE: s3a://iceberg-datalake
+      Events:
+        IoTFileEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref IoTBucket
+            Events: s3:ObjectCreated:*
+
+  IoTBucket:
+    Type: AWS::S3::Bucket
