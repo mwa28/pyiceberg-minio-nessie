@@ -6,24 +6,38 @@ Description: IoT File Processing with DuckDB and PyIceberg
 Resources:
   IoTFileProcessor:
     Type: AWS::Serverless::Function
+    # Metadata:
+    #     Dockerfile: Dockerfile  
+    #     DockerContext: ./lambda  
+    #     DockerTag: latest  
     Properties:
-      CodeUri: lambda_function/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Timeout: 30
+      PackageType: Image  
+      Architectures:
+        - arm64  
+      ImageUri: iot-file-processor:latest  
       Environment:
         Variables:
-          MINIO_ENDPOINT: http://localhost:9000
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          NESSIE_ENDPOINT: http://localhost:19120/iceberg
-          ICEBERG_WAREHOUSE: s3a://iceberg-datalake
+          MINIO_ENDPOINT: !Ref MinioEndpoint
+          MINIO_ACCESS_KEY: !Ref MinioAccessKey
+          MINIO_SECRET_KEY: !Ref MinioSecretKey
+          NESSIE_ENDPOINT: !Ref NessieEndpoint
       Events:
         IoTFileEvent:
           Type: S3
           Properties:
-            Bucket: !Ref IoTBucket
+            Bucket: iot-bucket 
             Events: s3:ObjectCreated:*
 
-  IoTBucket:
-    Type: AWS::S3::Bucket
+Parameters:
+  MinioEndpoint:
+    Type: String
+    Default: "http://localhost:9000"
+  MinioAccessKey:
+    Type: String
+    Default: "minioadmin"
+  MinioSecretKey:
+    Type: String
+    Default: "minioadmin"
+  NessieEndpoint:
+    Type: String
+    Default: "http://localhost:19120/iceberg"

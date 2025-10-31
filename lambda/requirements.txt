@@ -1,1 +1,4 @@
 pyiceberg==0.10.0
+pandas==2.3.3
+boto3==1.40.63
+pyarrow==22.0.0

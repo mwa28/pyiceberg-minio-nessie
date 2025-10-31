@@ -6,7 +6,7 @@ import pyarrow as pa
 from pyiceberg.catalog import load_catalog
 
 
-def lambda_handler(event, context):
+def handler(event, _):
     # Extract filename from S3 event
     bucket = event["Records"][0]["s3"]["bucket"]["name"]
     key = event["Records"][0]["s3"]["object"]["key"]

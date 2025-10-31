@@ -1,0 +1,10 @@
+podman run --rm -it \
+        -e MINIO_ENDPOINT=http://localhost:9000 \
+        -e MINIO_ACCESS_KEY=minioadmin \
+        -e MINIO_SECRET_KEY=minioadmin \
+        -e NESSIE_ENDPOINT=http://localhost:19120/iceberg \
+        --network host \
+        localhost/iot-file-processor:latest
+
+
+curl -XPOST "http://localhost:8080/2015-03-31/functions/function/invocations" -d @test/event.json
