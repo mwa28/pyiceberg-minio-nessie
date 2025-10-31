@@ -4,6 +4,8 @@ import boto3
 import pandas as pd
 import pyarrow as pa
 from pyiceberg.catalog import load_catalog
+from pyiceberg.schema import Schema
+from pyiceberg.types import DoubleType, LongType, NestedField, StringType
 
 
 def handler(event, _):
@@ -19,7 +21,7 @@ def handler(event, _):
         aws_access_key_id=os.getenv("MINIO_ACCESS_KEY"),
         aws_secret_access_key=os.getenv("MINIO_SECRET_KEY"),
     )
-    local_path = key.split("/")[-1]
+    local_path = f"/tmp/{key.split('/')[-1]}"
     s3.download_file(bucket, key, local_path)
 
     df = pd.read_json(local_path, lines=True)
@@ -30,9 +32,9 @@ def handler(event, _):
     catalog = load_catalog(
         "rest",
         **{
-            "uri": "http://localhost:19120/iceberg",
-            "warehouse": "s3a://iceberg-datalake",
-            "s3.endpoint": "http://localhost:9000",
+            "uri": "http://nessie:19120/iceberg",  # <-- Use the service name "nessie" inside Docker network
+            "warehouse": "iceberg-datalake",  # <-- Just the warehouse name
+            "s3.endpoint": "http://minio:9000",
             "s3.access-key-id": "minioadmin",
             "s3.secret-access-key": "minioadmin",
             "s3.path-style-access": "true",
@@ -41,7 +43,30 @@ def handler(event, _):
 
     catalog.create_namespace_if_not_exists("iceberg_db")
 
-    table = catalog.load_table("iceberg_db.sensor_historical_data")
+    schema = Schema(
+        NestedField(
+            name="controller_id", field_id=1000, field_type=StringType(), required=True
+        ),
+        NestedField(
+            name="timestamp", field_id=1001, field_type=LongType(), required=True
+        ),
+        NestedField(
+            name="parameter", field_id=1002, field_type=StringType(), required=True
+        ),
+        NestedField(
+            name="value", field_id=1003, field_type=DoubleType(), required=True
+        ),
+        NestedField(name="unit", field_id=1004, field_type=StringType(), required=True),
+    )
+    catalog.create_table_if_not_exists(
+        "iceberg_db.sensor_historical_data",
+        schema=schema,
+        location="iceberg-datalake/iceberg_db/sensor_historical_data",  # <-- Explicit location
+        properties={
+            "write.format.default": "parquet",
+            "write.parquet.compression-codec": "zstd",
+        },
+    )
     to_append = pa.Table.from_pandas(df, schema=table.schema().as_arrow())
 
     with table.transaction() as trx:
