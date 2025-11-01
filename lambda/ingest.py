@@ -18,8 +18,8 @@ def handler(event, _):
     s3 = boto3.client(
         "s3",
         endpoint_url=os.getenv("MINIO_ENDPOINT"),
-        aws_access_key_id=os.getenv("MINIO_ACCESS_KEY"),
-        aws_secret_access_key=os.getenv("MINIO_SECRET_KEY"),
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     )
     local_path = f"/tmp/{key.split('/')[-1]}"
     s3.download_file(bucket, key, local_path)
@@ -30,14 +30,9 @@ def handler(event, _):
     df["diff_ts"] = df.groupby(["controller_id", "parameter"])["timestamp"].diff()
 
     catalog = load_catalog(
-        "rest",
+        "nessie",
         **{
-            "uri": "http://nessie:19120/iceberg",  # <-- Use the service name "nessie" inside Docker network
-            "warehouse": "iceberg-datalake",  # <-- Just the warehouse name
-            "s3.endpoint": "http://minio:9000",
-            "s3.access-key-id": "minioadmin",
-            "s3.secret-access-key": "minioadmin",
-            "s3.path-style-access": "true",
+            "uri": "http://nessie:19120/iceberg/main",  # <-- Use "/api/v1" instead of "/iceberg"
         },
     )
 
@@ -58,7 +53,7 @@ def handler(event, _):
         ),
         NestedField(name="unit", field_id=1004, field_type=StringType(), required=True),
     )
-    catalog.create_table_if_not_exists(
+    table = catalog.create_table_if_not_exists(
         "iceberg_db.sensor_historical_data",
         schema=schema,
         location="iceberg-datalake/iceberg_db/sensor_historical_data",  # <-- Explicit location

@@ -1,15 +1,28 @@
+# Use the AWS Lambda Python 3.13 ARM64 base image
 FROM public.ecr.aws/lambda/python:3.13-arm64
 
-RUN mkdir /home/lambdauser \
-  && chown -R 1000:1000 /home/lambdauser
+# Create a directory for the non-root user
+RUN mkdir -p /home/lambdauser && \
+  chown -R 1000:1000 /home/lambdauser
 
+# Install build tools and dependencies using dnf
+RUN dnf install -y gcc gcc-c++ python3-devel openssl-devel bzip2-devel libffi-devel zlib-devel
+
+# Switch to the non-root user
 USER 1000
-ENV PYTHONUSERBASE=/home/lambdauser/.local
 
+# Set the environment variable for user-specific Python packages
+ENV PYTHONUSERBASE=/home/lambdauser/.local
+ENV PATH=/home/lambdauser/.local/bin:$PATH
+
+# Copy requirements file
 COPY requirements.txt ${LAMBDA_TASK_ROOT}
-RUN pip3 install --user -r requirements.txt --no-cache-dir
+
+# Install Python dependencies
+RUN pip install --user -r requirements.txt --no-cache-dir
+
 # Copy function code
 COPY ingest.py ${LAMBDA_TASK_ROOT}
 
-CMD [ "ingest.handler" ]
-
+# Set the Lambda handler
+CMD ["ingest.handler"]
