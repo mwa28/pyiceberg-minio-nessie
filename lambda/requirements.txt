@@ -1,5 +1,7 @@
-Cython==3.1.6
-pyiceberg[s3fs,sql-sqlite]==0.10.0
+Cython==3.0.12
+pyiceberg[s3fs,sql-sqlite]
 pandas==2.3.3
-boto3==1.40.63
-pyarrow==22.0.0
+boto3
+pyarrow
+# --only-binary=:all:
+# numpy

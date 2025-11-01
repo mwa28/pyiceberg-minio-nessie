@@ -19,7 +19,7 @@ ENV PATH=/home/lambdauser/.local/bin:$PATH
 COPY requirements.txt ${LAMBDA_TASK_ROOT}
 
 # Install Python dependencies
-RUN pip install --user -r requirements.txt --no-cache-dir
+RUN pip install --upgrade pip && pip install --user -r requirements.txt --no-cache-dir
 
 # Copy function code
 COPY ingest.py ${LAMBDA_TASK_ROOT}
