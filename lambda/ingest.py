@@ -85,7 +85,6 @@ def handler(event, _):
 
     # Append data
     to_append = pa.Table.from_pandas(df, schema=table.schema().as_arrow())
-    with table.transaction() as trx:
-        trx.append(to_append)
+    table.upsert(to_append, join_cols=["controller_id", "timestamp", "parameter"])
 
     return {"statusCode": 200, "file": key}
