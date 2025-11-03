@@ -1,28 +1,33 @@
-# Use the AWS Lambda Python 3.13 ARM64 base image
-FROM public.ecr.aws/lambda/python:3.13-arm64
+# Define custom function directory
+ARG FUNCTION_DIR="/function"
 
-# Create a directory for the non-root user
-RUN mkdir -p /home/lambdauser && \
-  chown -R 1000:1000 /home/lambdauser
+FROM python:3.12 AS build-image
 
-# Install build tools and dependencies using dnf
-RUN dnf install -y gcc gcc-c++ python3-devel openssl-devel bzip2-devel libffi-devel zlib-devel
-
-# Switch to the non-root user
-USER 1000
-
-# Set the environment variable for user-specific Python packages
-ENV PYTHONUSERBASE=/home/lambdauser/.local
-ENV PATH=/home/lambdauser/.local/bin:$PATH
-
-# Copy requirements file
-COPY requirements.txt ${LAMBDA_TASK_ROOT}
-
-# Install Python dependencies
-RUN pip install --upgrade pip && pip install --user -r requirements.txt --no-cache-dir
+# Include global arg in this stage of the build
+ARG FUNCTION_DIR
 
 # Copy function code
-COPY ingest.py ${LAMBDA_TASK_ROOT}
+RUN mkdir -p ${FUNCTION_DIR}
+COPY . ${FUNCTION_DIR}
+
+# Install the function's dependencies
+RUN pip install \
+  --target ${FUNCTION_DIR} \
+  awslambdaric -r ${FUNCTION_DIR}/requirements.txt --no-cache-dir
+
+# Use a slim version of the base Python image to reduce the final image size
+FROM python:3.12-slim
+
+# Include global arg in this stage of the build
+ARG FUNCTION_DIR
+# Set working directory to function root directory
+WORKDIR ${FUNCTION_DIR}
+
+# Copy in the built dependencies
+COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
+
+# Set runtime interface client as default command for the container runtime
+ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
 
 # Set the Lambda handler
 CMD ["ingest.handler"]
