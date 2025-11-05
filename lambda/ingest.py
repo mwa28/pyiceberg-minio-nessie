@@ -7,6 +7,8 @@ from pyiceberg.catalog import load_catalog
 from pyiceberg.schema import Schema
 from pyiceberg.types import DoubleType, LongType, NestedField, StringType
 
+from common.transform import calculate_delta
+
 
 def handler(event, _):
     # Extract filename from S3 event
@@ -25,24 +27,13 @@ def handler(event, _):
     s3.download_file(bucket, key, local_path)
     df = pd.read_json(local_path, lines=True, convert_dates=False)
 
-    # Calculate the difference from previous timestamp
-    df["diff_ts"] = df.groupby(["controller_id", "parameter"])["timestamp"].diff()
-    df["diff_ts"] = df["diff_ts"].fillna(df["timestamp"].astype("double"))
+    df = calculate_delta(df)
 
     # Load Nessie catalog with PyArrowFileIO
     catalog = load_catalog(
         "nessie",
         **{
             "uri": "http://nessie:19120/iceberg",
-            # "warehouse": "s3://iceberg-datalake/",
-            # "io-impl": "pyiceberg.io.pyarrow.PyArrowFileIO",
-            # "pyarrow.s3.endpoint_override": os.getenv("MINIO_ENDPOINT").replace(
-            #     "http://", ""
-            # ),
-            # "pyarrow.s3.access_key": os.getenv("AWS_ACCESS_KEY_ID"),
-            # "pyarrow.s3.secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
-            # "pyarrow.s3.region": "us-east-1",
-            # "pyarrow.s3.scheme": "http",  # Use "https" if your MinIO endpoint uses HTTPS
         },
     )
 

@@ -8,7 +8,8 @@ ARG FUNCTION_DIR
 
 # Copy function code
 RUN mkdir -p ${FUNCTION_DIR}
-COPY . ${FUNCTION_DIR}
+COPY ./lambda/ ${FUNCTION_DIR}
+COPY ./common/ ${FUNCTION_DIR}
 
 # Install the function's dependencies
 RUN pip install \
