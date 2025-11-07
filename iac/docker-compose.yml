@@ -83,38 +83,38 @@ services:
     networks:
       iceberg:
     
-
-  # Bitnami Spark Master
+  # Apache Spark 
   spark:
-    image: docker.io/bitnami/spark:latest
+    # image: public.ecr.aws/amazon/aws-glue-libs:5
+    image: spark-standalone:latest
     container_name: spark
+    # Set up workspace and script locations
+
+    # WORKSPACE_LOCATION=/local_path_to_workspace
+    # SCRIPT_FILE_NAME=sample.py
+
+    # Run container with spark-submit
+
+    # docker run -it --rm \
+    #     -e AWS_PROFILE=$PROFILE_NAME \
+    #     spark-submit /home/hadoop/workspace/src/$SCRIPT_FILE_NAME
     environment:
-      - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      # - AWS_ENDPOINT_URL=http://minio:9000
+      # - AWS_S3_PATH_STYLE_ACCESS=true
+      - AWS_REGION=us-east-1
+      - IVY_HOME=/opt/spark/.ivy2
+      # - PYTHONPATH=/opt/spark/work-dir
     ports:
-      - "18080:8080"
-      - "7077:7077"
+      - "18090:8080"   # Spark Master UI
+      - "7077:7077"   # Spark Master port
+      - "14040:4040"   # Spark Application UI
     networks:
       iceberg:
     depends_on:
       - nessie
       - minio
 
-  # Bitnami Spark Worker
-  spark-worker:
-    image: docker.io/bitnami/spark:latest
-    container_name: spark-worker
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark:7077
-      - SPARK_WORKER_MEMORY=1G
-      - SPARK_WORKER_CORES=1
-    networks:
-      iceberg:
-    depends_on:    
-      - spark
 networks:
   iceberg:
